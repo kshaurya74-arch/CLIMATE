@@ -37,15 +37,17 @@
             min-height: 100vh;
         }
 
-        /* --- VIDEO BACKGROUND --- */
-        #bg-video {
+        /* --- SEAMLESS VIDEO BACKGROUND --- */
+        .bg-video {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
             object-fit: cover;
+            object-position: center center;
             z-index: -2;
+            transition: opacity 2s ease-in-out; /* 2 second smooth fade */
         }
 
         .video-overlay {
@@ -404,18 +406,12 @@
         .action-btn.red-mode:hover { background: rgba(255,0,60,0.1); }
 
         /* Map Styles */
-        #ev-map {
-            width: 100%; height: 60vh; border-radius: 24px; z-index: 1; border: 1px solid var(--glass-border);
-        }
+        #ev-map { width: 100%; height: 60vh; border-radius: 24px; z-index: 1; border: 1px solid var(--glass-border); }
         #report-map { height: 300px; width: 100%; border-radius: 24px; border: 1px solid var(--danger-red); }
         
-        .external-map-container {
-            width: 100%; height: 70vh; border-radius: 24px; overflow: hidden; border: 1px solid var(--glass-border); background: #fff;
-        }
+        .external-map-container { width: 100%; height: 70vh; border-radius: 24px; overflow: hidden; border: 1px solid var(--glass-border); background: #fff; }
 
-        .ev-dashboard {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; margin-bottom: 25px;
-        }
+        .ev-dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; margin-bottom: 25px; }
         .ev-stat-card {
             background: linear-gradient(135deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9)); border: 1px solid var(--glass-border);
             border-radius: 20px; padding: 20px; text-align: center; backdrop-filter: blur(10px);
@@ -423,12 +419,8 @@
         .ev-stat-card h3 { font-size: 2rem; margin: 10px 0 5px 0; font-family: 'Montserrat', sans-serif; color: #fff; }
         .ev-stat-card p { margin: 0; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; font-weight: 700; }
         
-        .ev-main-container {
-            display: flex; gap: 20px; width: 100%; height: 60vh;
-        }
-        .ev-map-enhanced {
-            flex: 2; border-radius: 24px; border: 1px solid var(--neon-blue); box-shadow: 0 0 20px rgba(0, 210, 255, 0.1); z-index: 1;
-        }
+        .ev-main-container { display: flex; gap: 20px; width: 100%; height: 60vh; }
+        .ev-map-enhanced { flex: 2; border-radius: 24px; border: 1px solid var(--neon-blue); box-shadow: 0 0 20px rgba(0, 210, 255, 0.1); z-index: 1; }
         .ev-sidebar {
             flex: 1; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 20px;
             overflow-y: auto; backdrop-filter: blur(10px); display: flex; flex-direction: column;
@@ -444,7 +436,6 @@
         .ev-list-item h5 { margin: 0 0 5px 0; font-family: 'Montserrat', sans-serif; font-size: 1.05rem; color: #fff; }
         .ev-list-item p { margin: 0; font-size: 0.85rem; color: #aaa; display: flex; align-items: center; }
         
-        /* Neon Pulsing Green Effect for Available Status */
         @keyframes greenPulse {
             0% { box-shadow: 0 0 8px var(--neon-green); }
             50% { box-shadow: 0 0 15px var(--neon-green), 0 0 25px var(--neon-green); }
@@ -483,14 +474,12 @@
         .cause-list { list-style: none; line-height: 2.2; font-size: 1.1rem; }
         .cause-list i { margin-right: 12px; width: 20px; text-align: center; }
 
-        /* --- CAUSES HOVER SWAP EFFECT --- */
         .causes-swap-container { position: relative; width: 100%; height: 210px; }
         .cause-list-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transition: opacity 0.4s ease, visibility 0.4s; }
         .causes-chart-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s; }
         #causes:hover .cause-list-wrapper { opacity: 0; visibility: hidden; }
         #causes:hover .causes-chart-wrapper { opacity: 1; visibility: visible; }
 
-        /* --- FLOATING BALLOON --- */
         .neon-balloon {
             position: fixed; bottom: -100px; left: 30px; width: 60px; height: 75px; 
             background: var(--neon-blue); border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
@@ -521,7 +510,6 @@
         .close-fact { cursor: pointer; color: var(--text-muted); }
         .close-fact:hover { color: var(--neon-red); }
 
-        /* --- INSIGHTS / AWARENESS STYLES --- */
         #simulation-canvas { width: 100%; height: 300px; border: 1px solid var(--glass-border); border-radius: 12px; }
         .btn-group { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;}
         .season-btn { margin-right: 10px; }
@@ -557,7 +545,10 @@
 </head>
 <body>
 
-    <video autoplay muted loop playsinline id="bg-video">
+    <video autoplay muted playsinline id="bg-video-1" class="bg-video">
+        <source src="10354256-hd_1080_1920_30fps.mp4" type="video/mp4">
+    </video>
+    <video muted playsinline id="bg-video-2" class="bg-video" style="opacity: 0;">
         <source src="10354256-hd_1080_1920_30fps.mp4" type="video/mp4">
     </video>
     <div class="video-overlay"></div>
@@ -936,6 +927,38 @@
             generateCaptcha(); 
             initSimulation();
             initTimelineProgress();
+            initSeamlessVideo(); // Starts the dual-video crossfade
+        }
+
+        // --- SEAMLESS VIDEO CROSSFADE SCRIPT ---
+        function initSeamlessVideo() {
+            const v1 = document.getElementById('bg-video-1');
+            const v2 = document.getElementById('bg-video-2');
+            let activeVideo = 1;
+            const fadeTime = 2.0; // Seconds to crossfade before end
+
+            // Ensure first video plays
+            v1.play().catch(e => console.log("Video autoplay blocked by browser:", e));
+            
+            v1.addEventListener('timeupdate', () => {
+                if (activeVideo === 1 && v1.duration - v1.currentTime <= fadeTime) {
+                    activeVideo = 2;
+                    v2.currentTime = 0;
+                    v2.play();
+                    v2.style.opacity = 1;
+                    v1.style.opacity = 0;
+                }
+            });
+
+            v2.addEventListener('timeupdate', () => {
+                if (activeVideo === 2 && v2.duration - v2.currentTime <= fadeTime) {
+                    activeVideo = 1;
+                    v1.currentTime = 0;
+                    v1.play();
+                    v1.style.opacity = 1;
+                    v2.style.opacity = 0;
+                }
+            });
         }
 
         function switchTab(tabId) {
@@ -1132,7 +1155,7 @@
                     ? `<span style="color: var(--neon-green); font-weight: 800; text-shadow: 0 0 8px rgba(0,255,157,0.6);">${st.status}</span>` 
                     : `<span style="color: #aaa;">${st.status}</span>`;
 
-                // Map Popup with New Email & Phone buttons
+                // Map Popup with Email & Phone buttons
                 let popupContent = `
                     <div style="font-family: 'Montserrat', sans-serif; color: #111; min-width: 240px;">
                         <h4 style="margin: 0 0 8px 0; font-weight: 800; font-size: 1.1rem; border-bottom: 2px solid var(--neon-blue); padding-bottom: 5px;">${st.name}</h4>
@@ -1179,12 +1202,11 @@
             document.getElementById('ev-list').innerHTML = sidebarHTML;
         }
 
-        // Trigger map zoom and popup from sidebar click
         function focusEvMarker(index) {
             const marker = evMarkers[index];
             if (marker) {
                 evMap.flyTo(marker.getLatLng(), 15, { animate: true, duration: 1.5 });
-                setTimeout(() => { marker.openPopup(); }, 1500); // Open popup after flight
+                setTimeout(() => { marker.openPopup(); }, 1500); 
             }
         }
 
