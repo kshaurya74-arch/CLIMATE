@@ -916,10 +916,9 @@
         let season = 'winter';
         let particles = [];
         
-        // AI Config with CORS Proxy and Mistral Small Latest Model
-        const MISTRAL_KEY = "RAmK6mqLKrUnTv9YeEMFBnDQFcEFdafM"; 
-        const MISTRAL_URL = "https://corsproxy.io/?https://api.mistral.ai/v1/chat/completions";
-
+    
+const GEMINI_KEY = "AIzaSyBKZ9ZejCG1b59ylvXyuXAlVJqITtAPt7g"; // Replace this with your free key from Google AI Studio
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
         function init() {
             getLocation();
             initCharts();
@@ -1228,62 +1227,73 @@
         }
 
         async function sendChatMsg() {
-            const input = document.getElementById('chatInput');
-            const windowObj = document.getElementById('chatWindow');
-            const msgText = input.value.trim();
-            if(msgText === "") return;
-            
-            windowObj.innerHTML += `<div class="msg msg-user">${msgText}</div>`;
-            input.value = "";
-            windowObj.scrollTop = windowObj.scrollHeight;
-            
-            const typingId = "bot-typing-" + Date.now();
-            windowObj.innerHTML += `<div class="msg msg-bot" id="${typingId}">
-                <i class="fas fa-spinner fa-spin"></i> Analyzing atmosphere...
-            </div>`;
-            windowObj.scrollTop = windowObj.scrollHeight;
+    const input = document.getElementById('chatInput');
+    const windowObj = document.getElementById('chatWindow');
+    const msgText = input.value.trim();
+    if(msgText === "") return;
+    
+    // Add user message to chat
+    windowObj.innerHTML += `<div class="msg msg-user">${msgText}</div>`;
+    input.value = "";
+    windowObj.scrollTop = windowObj.scrollHeight;
+    
+    // Add typing indicator
+    const typingId = "bot-typing-" + Date.now();
+    windowObj.innerHTML += `<div class="msg msg-bot" id="${typingId}">
+        <i class="fas fa-spinner fa-spin"></i> Analyzing atmosphere...
+    </div>`;
+    windowObj.scrollTop = windowObj.scrollHeight;
 
-            try {
-                const response = await fetch(MISTRAL_URL, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${MISTRAL_KEY}`,
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify({
-                        model: "mistral-small-latest",
-                        messages: [
-                            { 
-                                role: "system", 
-                                content: `You are Vayuxa, an expert AI guardian for Delhi's Air Quality. Your mission is to strictly answer questions related to pollution, AQI, EV vehicles, health precautions (like N95 masks), GRAP (Graded Response Action Plan), and climate change. If the user asks a question UNRELATED to these topics, politely refuse to answer and guide them back to discussing air quality. Current Delhi Context: AQI is 342 (Hazardous). GRAP Stage III is active. Be concise, urgent, and helpful.` 
-                            },
-                            { role: "user", content: msgText }
-                        ],
-                        temperature: 0.3
-                    })
-                });
+    try {
+        const systemPrompt = "You are Vayuxa, an expert AI guardian for Delhi's Air Quality. Your mission is to strictly answer questions related to pollution, AQI, EV vehicles, health precautions (like N95 masks), GRAP (Graded Response Action Plan), and climate change. If the user asks a question UNRELATED to these topics, politely refuse to answer and guide them back to discussing air quality. Current Delhi Context: AQI is 342 (Hazardous). GRAP Stage III is active. Be concise, urgent, and helpful.";
 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    document.getElementById(typingId).innerHTML = data.choices[0].message.content;
-                } else {
-                    if (response.status === 401) {
-                        document.getElementById(typingId).innerText = "API Error 401: Invalid API Key. Please generate a new key on Mistral.";
-                    } else if (response.status === 429) {
-                        document.getElementById(typingId).innerText = "API Error 429: Out of credits or rate limit exceeded. Add a billing method to your Mistral account.";
-                    } else {
-                        document.getElementById(typingId).innerText = `Error: ${data.error?.message || "Unknown API failure"}`;
-                    }
-                    console.error("Mistral API Error details:", data);
+        // Call Gemini API
+        const response = await fetch(GEMINI_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "systemInstruction": {
+                    "parts": [{"text": systemPrompt}]
+                },
+                "contents": [{
+                    "parts": [{"text": msgText}]
+                }],
+                "generationConfig": {
+                    "temperature": 0.3
                 }
-            } catch (error) {
-                document.getElementById(typingId).innerText = "Network Error. Connection intercepted. Are you connected to the internet?";
-                console.error("Fetch Error:", error);
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.candidates && data.candidates.length > 0) {
+            let replyText = data.candidates[0].content.parts[0].text;
+            
+            // Convert Gemini's markdown line breaks into HTML line breaks
+            replyText = replyText.replace(/\n/g, "<br>");
+            
+            // Format bold text (from **text** to <strong>text</strong>)
+            replyText = replyText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            document.getElementById(typingId).innerHTML = replyText;
+        } else {
+            // Handle API errors
+            if (data.error) {
+                document.getElementById(typingId).innerText = `Error: ${data.error.message}`;
+            } else {
+                document.getElementById(typingId).innerText = "System malfunction. Unable to process data.";
             }
-            windowObj.scrollTop = windowObj.scrollHeight;
+            console.error("Gemini API Error details:", data);
         }
+    } catch (error) {
+        document.getElementById(typingId).innerText = "Network Error. Connection intercepted. Are you connected to the internet?";
+        console.error("Fetch Error:", error);
+    }
+    
+    windowObj.scrollTop = windowObj.scrollHeight;
+}
 
         // --- REPORT MODAL LOGIC ---
         function openReportModal() {
